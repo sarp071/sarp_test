@@ -1,0 +1,12 @@
+{
+  "menstrual": "Menstrual",
+  "follicular": "Follicular",
+  "ovulation": "Ovulation",
+  "luteal": "Luteal",
+  "pms": "PMS",
+  "menstrual_description": "Your period days. Time to rest and recharge.",
+  "follicular_description": "Energy rising. Great time for new beginnings.",
+  "ovulation_description": "Peak energy and fertility window.",
+  "luteal_description": "Energy stabilizing. Time for self-care.",
+  "pms_description": "Be gentle with yourself."
+}

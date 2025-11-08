@@ -143,6 +143,316 @@ None
 
 ---
 
+## 2025-11-08 - BabeCycle Project Planning
+
+### Summary
+Comprehensive planning session for BabeCycle menstrual cycle tracking application with partner sharing features. Established English-first i18n architecture, designed complete database schema, and created 7-phase implementation roadmap.
+
+### Changes Made
+- ✅ Created comprehensive PROJECT_PLAN.md (977 lines)
+- ✅ Designed complete database schema with i18n support
+- ✅ Established English-only development policy
+- ✅ Planned 7-phase implementation roadmap
+- ✅ Defined notification engine architecture (30+ types)
+- ✅ Designed dual account system (female/male roles)
+- ✅ Created copy-paste ready prompts for AI-assisted development
+- ✅ Established working methodology and conventions
+
+### Architecture Decisions
+
+#### Project Pivot: BabeCycle
+- **From**: Basic Next.js authentication starter
+- **To**: Full-featured menstrual cycle tracker with partner sharing
+- **Key Features**:
+  - Dual account system (female tracker / male supporter)
+  - Multi-partner support (N:N relationships)
+  - Flexible privacy controls (phase-only vs. phase+dates)
+  - Smart notification engine (context-aware, timezone-smart)
+  - Cycle overwrite with audit trail
+  - i18n-ready from day 1
+
+#### i18n Architecture
+- **Critical Decision**: Develop in **English only** for MVP
+- **Database Support**: `profiles.locale` column ('en'|'tr'|'es'|'fr'|'ar')
+- **Translation Structure**: `/lib/i18n/locales/{locale}/` (only 'en' populated)
+- **Future Languages**: Turkish, Spanish, French, Arabic (RTL)
+- **Policy**:
+  - ✅ All UI text in English
+  - ✅ All code comments in English
+  - ✅ All documentation in English
+  - ❌ NO Turkish content in codebase
+  - ✅ i18n infrastructure ready for future expansion
+
+#### Database Schema Design
+**10 Core Tables**:
+1. `profiles` - User accounts with role, locale, timezone
+2. `cycles` - Menstrual cycle tracking with version control
+3. `cycle_corrections` - Audit trail for historical changes
+4. `daily_logs` - Mood, symptoms, notes (JSONB)
+5. `partner_links` - N:N relationships with share_scope
+6. `user_notification_prefs` - Global notification settings
+7. `link_notification_prefs` - Per-partner notification controls
+8. `notifications_queue` - Scheduled notification delivery
+9. `translations` - Future dynamic content translations
+10. `auth.users` - Supabase managed (existing)
+
+**Key Design Patterns**:
+- **Multi-Partner Support**: `partner_links` with `share_scope` ENUM
+- **Granular Privacy**: 'phase_only' vs. 'phase_plus_dates'
+- **Cycle Overwrites**: `cycle_corrections` audit trail
+- **Timezone Aware**: `profiles.tz` for smart scheduling
+- **i18n Ready**: `profiles.locale` + `translations` table
+- **RLS Enabled**: Row-Level Security on all tables
+
+#### Notification Engine Architecture
+**30+ Notification Types**:
+- **Female User** (15 types):
+  - T-3 days warning
+  - Period start (gentle encouragement)
+  - Period midpoint (self-care reminder)
+  - Period end (energy boost)
+  - Phase transitions (follicular, ovulation, luteal, PMS)
+  - Irregularity detection
+  - Logging streak reminders
+  - Symptom pattern alerts
+  - Partner muted/unmuted confirmations
+  - Data export ready
+
+- **Male User** (15+ types):
+  - T-3 days heads-up
+  - Critical window start
+  - Phase transition alerts
+  - Communication tips
+  - Symptom context education
+  - Partner preferences changed
+  - Link invitation status
+  - Quiet mode confirmations
+
+**Smart Features**:
+- Context-aware scheduling (cycle phase, time of day)
+- Timezone-smart delivery (user's local time)
+- Quiet hours respect (22:00-08:00 default)
+- Per-partner muting
+- Notification history tracking
+
+### Files Added
+
+#### Documentation
+- `/docs/PROJECT_PLAN.md` - Complete 7-phase implementation roadmap
+  - Phase 0: Foundation Setup (UI-UX + i18n)
+  - Phase 1: Database & Infrastructure
+  - Phase 2: UI Component Library
+  - Phase 3: Female User Flow
+  - Phase 4: Male User Flow
+  - Phase 5: Notification Engine
+  - Phase 6: Testing & Quality
+  - Phase 7: Deployment
+- `/docs/SESSIONS.md` - Updated with Session #2 details
+
+#### Planned Structure (from PROJECT_PLAN.md)
+```
+/lib/i18n/               # i18n utilities
+  ├── config.ts          # Locale configuration
+  ├── server.ts          # Server-side i18n
+  ├── client.ts          # Client-side i18n
+  └── locales/
+      ├── en/            # English (ACTIVE)
+      ├── tr/            # Turkish (FUTURE)
+      ├── es/            # Spanish (FUTURE)
+      ├── fr/            # French (FUTURE)
+      └── ar/            # Arabic (FUTURE, RTL)
+
+/lib/timezone.ts         # TZ detection & conversion
+/lib/analytics.ts        # Privacy-first analytics
+/lib/phase.ts            # Cycle phase calculations
+/lib/notify/             # Notification engine
+  ├── engine.ts
+  ├── context.ts
+  ├── rules.ts
+  └── templates.ts
+
+/components/babecycle/   # BabeCycle UI components
+  ├── PhaseTag.tsx
+  ├── QuickAction.tsx
+  ├── MoodPicker.tsx
+  ├── SymptomChip.tsx
+  ├── CalendarDay.tsx
+  ├── PartnerCard.tsx
+  └── ...
+
+/types/                  # TypeScript definitions
+  ├── user.ts
+  ├── cycle.ts
+  ├── partner.ts
+  ├── notification.ts
+  └── i18n.ts
+```
+
+### Dependencies Planned (Not Yet Installed)
+```json
+{
+  "next-intl": "^3.x",           // i18n with ICU format
+  "date-fns-tz": "^2.x",         // Timezone utilities
+  "framer-motion": "^11.x",      // Animations
+  "lucide-react": "^0.x",        // Icons
+  "recharts": "^2.x",            // Charts for insights
+  "zod": "^3.x"                  // Validation
+}
+```
+
+### Configuration Changes
+
+#### Planned i18n Config
+```typescript
+// lib/i18n/config.ts
+export const i18n = {
+  defaultLocale: 'en',
+  locales: ['en', 'tr', 'es', 'fr', 'ar'],
+  localeDetection: true,
+  rtlLocales: ['ar']
+} as const;
+```
+
+#### Planned Database Schema Updates
+```sql
+-- Add to profiles table
+ALTER TABLE profiles
+ADD COLUMN role user_role NOT NULL,
+ADD COLUMN locale text DEFAULT 'en' CHECK (locale IN ('en','tr','es','fr','ar')),
+ADD COLUMN tz text DEFAULT 'UTC';
+
+-- Create new tables (10 total, see PROJECT_PLAN.md)
+```
+
+### Breaking Changes
+None - This is a planning session, no code changes yet
+
+### Migration Notes
+- Existing auth system will be extended (not replaced)
+- Current `profiles` table needs additional columns
+- RLS policies will be added to existing structure
+
+### Testing Checklist
+- [ ] Review PROJECT_PLAN.md for completeness
+- [ ] Validate database schema design
+- [ ] Confirm i18n architecture approach
+- [ ] Verify notification engine design
+- [ ] Approve 7-phase timeline (3 weeks)
+
+### Known Issues
+None - Planning phase complete
+
+### Future Enhancements (Roadmap)
+**MVP (Week 1-3)**:
+- English-only UI
+- Core cycle tracking
+- Partner sharing
+- Notification engine
+- Privacy controls
+
+**Post-MVP (Month 2+)**:
+- Turkish language activation
+- Spanish language
+- French language
+- Arabic language (RTL support)
+- Advanced analytics
+- Data export (PDF reports)
+- Photo logging
+- Partner messaging (encrypted)
+- Pregnancy mode
+- Menopause tracking
+
+### Performance Considerations
+**Target Metrics**:
+- Build time: <2 min
+- Bundle size: <500 KB (first load)
+- API response: <200ms (p95)
+- Lighthouse score: >90
+- Test coverage: >70%
+
+### Documentation Additions
+- Comprehensive PROJECT_PLAN.md with:
+  - Complete database schema
+  - 15+ copy-paste ready prompts
+  - i18n architecture guide
+  - Notification engine design
+  - Success metrics & KPIs
+  - 3-week timeline
+  - English-only policy documentation
+
+### Working Methodology Established
+**Sprint Ritual**:
+1. Mini-plan (1-2 deliverables)
+2. Single prompt = Complete feature
+3. DoD checklist verification
+4. Auto-documentation update
+
+**Branch & Commit Convention**:
+- Branch: `feat/<feature-name>`
+- Commit: `feat(scope): description`
+- Example: `feat(db): add cycles table + RLS policies`
+
+**Prompt Engineering Principles**:
+- Provide full file paths
+- Define success conditions
+- List files to modify
+- Include test commands
+- Specify DoD checklist
+
+### Language Policy (Critical)
+This project follows a strict **English-first** development approach:
+
+**✅ ALLOWED**:
+- English UI text
+- English code comments
+- English documentation
+- English commit messages
+- English translation keys
+
+**❌ FORBIDDEN**:
+- Turkish content in UI
+- Turkish code comments
+- Mixed language files
+- Hard-coded Turkish strings
+
+**REASON**: User communicates in Turkish but explicitly requested English codebase for:
+- International collaboration
+- Professional standards
+- Easier maintenance
+- Future scalability
+- i18n best practices
+
+### i18n Readiness Checklist
+- [x] `profiles.locale` column designed
+- [x] `translations` table designed (future)
+- [x] `/lib/i18n/` utilities planned
+- [x] Translation file structure defined
+- [x] English content planned
+- [x] Future locale expansion documented
+- [x] RTL support architecture planned (Arabic)
+- [ ] Implementation (pending user approval)
+
+### Next Immediate Steps
+**Awaiting User Approval To**:
+1. Start Phase 0: Foundation Setup
+   - Implement UI-UX Design System
+   - Set up i18n infrastructure
+2. Start Phase 1.1: Database Schema + RLS + Seed
+   - Copy-paste Prompt #1 ready in PROJECT_PLAN.md
+3. Proceed through remaining phases
+
+### Session Statistics
+- **Planning Duration**: ~140 minutes
+- **Documentation Created**: 977 lines (PROJECT_PLAN.md)
+- **Phases Designed**: 7 phases
+- **Prompts Prepared**: 15+ copy-paste ready
+- **Database Tables**: 10 core tables designed
+- **Notification Types**: 30+ types planned
+- **Supported Locales**: 5 (en active, 4 future)
+- **Timeline**: 3-week MVP estimate
+
+---
+
 ## Template for Future Entries
 
 ```markdown
